@@ -1,0 +1,74 @@
+name: lf-query-api
+chart:
+  git: git@github.azc.ext.hp.com:hp-data-platform/dataos-helm-charts.git
+  path: charts/dataos-web-app
+  ref: REL-1.0.69
+ecr_repos:
+  - name: lf-query-api
+    key: webapp.image
+  - name: dataos-flywaydb
+    key: dbMigration.image
+values:
+  global_properties_file: "k8s-config/{{app}}/global.properties"
+  file: 'k8s-config/{{app}}/{{app}}.yml'
+  script: 'scripts/k8s/gen_lf_config.py'  
+  default:
+    webapp:   
+      livenessProbe:
+        httpGet:
+          path: /api/v1/healthcheck
+          port: 7800
+      resources:
+        requests:
+          memory: "1000M"
+          cpu: "200m"
+        limits:
+          memory: "1000M"
+          cpu: "200m"
+      secrets:
+        lf-query-api:
+          data:
+          - secretName: blacksea/dev/mysqlDb/reader
+            property: username
+            k8sProperty: QUERYAPI_DATABASE_USER
+          - secretName: blacksea/dev/mysqlDb/reader
+            property: password
+            k8sProperty: QUERYAPI_DATABASE_PASSWORD
+      config:
+        type: env
+        singleLine:
+          QUERYAPI_DATABASE_DIALECT:
+            value: "mysql"
+          QUERYAPI_DATABASE_HOST:
+            value: "{{blacksea.lf.aws.rds.mysql.readonly-host}}"
+          QUERYAPI_DATABASE_NAME:
+            value: "{{stack_name}}_report"
+          STACK_NAME:
+            value: "{{stack-name}}"
+          S3_BUCKET:
+            value: "{{blacksea.lf.aws.s3.usage-api.usage-api-url-s3-bucket}}"
+          S3_BUCKET_KEY:
+            value: "{{blacksea.lf.aws.s3.usage-api.usage-api-url-s3-path-prefix}}"            
+      ingress:
+        enable: true
+        host: "{{lf-query-api.ingress.nginx.hostname}}"
+        secret: "{{lf-query-api.ingress.nginx.secret}}"
+        paths:
+        - path: /
+          port: 7800
+      service:
+        ports:
+        - name: http
+          port: 7800
+          protocol: TCP
+      albIngress:
+        enable: false
+    serviceAccounts:
+      k8s-lf-query-api:
+        annotations:
+          eks.amazonaws.com/role-arn: arn:aws:iam::$${{blacksea.lf.aws.account-id}}$$:role/$${{lf-query-api.kubernetes.service_account_role}}$$
+    serviceAccountName: k8s-lf-query-api
+    dbMigration:
+      enable: false
+    nodeSelector:
+      deployment: default
