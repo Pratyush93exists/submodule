@@ -1,0 +1,30 @@
+#### config worker	 
+ 	# config:
+ 	# type: volume
+ 	# singleLine:
+ 	# dbHost:
+ 	# value: database.com
+ 	# mountPath: /somepath
+ 	# database:
+ 	# value: mydatabase
+ 	# mountPath: /somepath
+ 
+	# multiLine:	 
+		# dbconfig:
+		# mountPath: /somepath
+		# value: |-
+		# abc
+		# xyz
+Example
+======================= 
+ config:
+        type: volume
+        multiLine:
+            instance.conf:
+                mountPath: /conf
+                value: |-
+                    DB_HOST: gbd-lf-common-dev-mysqldbcluster-u0a64ww9sa5e.cluster-ci0obxa2r32i.us-west-2.rds.amazonaws.com
+                    DB_CLUSTER: gbd-lf-common-dev-mysqldbcluster-u0a64ww9sa5e
+                    DB_PORT: 3306
+                    DB_ENGINE: mysql
+                    SNS_ARN: arn:aws:sns:us-west-2:179791809912:rcb-lf-data-lake-IntegrationTopic-UIDXXVA9MCI4 
